@@ -1,0 +1,59 @@
+body{
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.board-wrapper{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f0f0;
+}
+
+// Styling for the board
+.board {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: auto;
+}
+
+// Styling for each row
+.row {
+    display: flex;
+    gap: 2px;
+}
+
+// Styling for each cell
+.cell {
+    width: 20px;
+    height: 20px;
+    border: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+// Specific styles for different cell types
+.cell.wall {
+    background-color: #333;
+}
+
+.cell.start {
+    background-color: #4caf50;
+}
+
+.cell.end {
+    background-color: #f44336;
+}
+
+.cell.empty {
+    background-color: #fff;
+}
+
+.cell.tower{
+    background-color: #2196F3;
+}
