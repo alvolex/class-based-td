@@ -1,7 +1,8 @@
 "use client";
-import { useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import './board.scss';
 import BoardBase from "@/classes/BoardBase";
+import EnemyBase from "@/classes/EnemyBase";
 
 export default function Home() {
   const [boardHtml, setBoardHtml] = useState<string>('');
@@ -10,6 +11,26 @@ export default function Home() {
     newBoard.generate();
     return newBoard;
   });
+
+  const enemy = useMemo(() => new EnemyBase(board, 0.1), [board]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      enemy.update();
+      const enemyPosition = enemy.getPosition();
+      const enemyX = Math.floor(enemyPosition.x);
+      const enemyY = Math.floor(enemyPosition.y);
+
+      // Update the enemy's position using absolute positioning
+      const enemyDiv = document.querySelector('.enemy') as HTMLElement;
+      if (enemyDiv) {
+        enemyDiv.style.left = `${enemyX * 20}px`; // Assuming each cell is 20px wide
+        enemyDiv.style.top = `${enemyY * 20}px`; // Assuming each cell is 20px tall
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [enemy]);
 
   const handleAddTower = (x: number, y: number) => {
     if (board.addTower(x, y)) {
@@ -23,9 +44,9 @@ export default function Home() {
   }
 
   return (
-    <div>
+    <div className={'board-wrapper'}>
       <div
-        className={'board-wrapper'}
+        
         dangerouslySetInnerHTML={{ __html: boardHtml }}
         onClick={(e) => {
           const target = e.target as HTMLElement;
@@ -38,6 +59,7 @@ export default function Home() {
           }
         }}
       />
+      <div className="enemy"></div>
     </div>
   );
 }

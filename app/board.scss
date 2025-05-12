@@ -11,27 +11,28 @@ body{
     align-items: center;
     justify-content: center;
     background-color: #f0f0f0;
+    position: relative;
 }
 
 // Styling for the board
 .board {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    //gap: 2px;
     margin: auto;
 }
 
 // Styling for each row
 .row {
     display: flex;
-    gap: 2px;
+    //gap: 2px;
 }
 
 // Styling for each cell
 .cell {
     width: 20px;
     height: 20px;
-    border: 1px solid #ccc;
+    //border: 1px solid #ccc;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -56,4 +57,17 @@ body{
 
 .cell.tower{
     background-color: #2196F3;
+}
+
+.cell.enemy{
+    position: absolute;
+    background-color: #FF9800;
+}
+
+/* Styling for the enemy */
+.enemy {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: red;
 }
