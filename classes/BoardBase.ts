@@ -32,6 +32,23 @@ class BoardBase {
     this.findShortestPath(); // Generate the path
   }
 
+  startGame(): void {
+    setInterval(() => {
+      //call update on all enemies
+      this.enemies.forEach((enemy) => {
+        enemy.update();
+      });
+
+      //go through all towers and check if they can attack
+      this.towers.forEach((tower) => {
+        if (tower.lastAttackTime + tower.attackSpeed < Date.now()) {
+          tower.attackClosestEnemy();
+          tower.lastAttackTime = Date.now();
+        }
+      });
+    }, 100);
+  }
+
   // Draws the grid as an HTML structure
   draw(): string {
     return this.grid

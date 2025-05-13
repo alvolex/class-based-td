@@ -9,7 +9,6 @@ class EnemyBase {
   private temporaryPath: [number, number][] | null = null;
   public lastPosition: { x: number; y: number } | null = null;
   private health: number = 100;
-  private interval: NodeJS.Timeout | null = null;
   public isDead: boolean = false;
 
   constructor(board: BoardBase, speed: number = 0.01, health: number = 100) {
@@ -27,10 +26,6 @@ class EnemyBase {
     // Start at the first position in the path
     const [startY, startX] = this.path[0];
     this.position = { x: startX, y: startY };
-
-    this.interval = setInterval(() => {
-      this.update();
-    }, 100);
   }
 
   // Updates the enemy's position by lerping towards the next point in the path
@@ -84,15 +79,12 @@ class EnemyBase {
   }
   public die(): void {
     console.log("Enemy has died.");
-    if (this.interval) {
-      clearInterval(this.interval);
-      this.interval = null;
-      this.currentBoard?.unregisterEnemy(this);
-    }
+    this.currentBoard?.unregisterEnemy(this);
+
   }
 
   private followPath(path: [number, number][], isTemporaryPath: boolean = false): void {
-    if (this.pathIndex >= path.length - 1) {
+    if (this.pathIndex >= path.length - 1 || this.isDead) {
       return;
     }
 

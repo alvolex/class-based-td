@@ -5,10 +5,11 @@ import EnemyBase from "./EnemyBase";
 class TowerBase {
   private board: BoardBase;
   private damage: number;
-  private attackSpeed: number; // milliseconds between checks
   private range: number; // range in cells
   private position: { x: number; y: number };
   private intervalId: number | null = null;
+  public attackSpeed: number; // milliseconds between checks
+  public lastAttackTime: number = 0;
 
   constructor(
     board: BoardBase,
@@ -29,14 +30,14 @@ class TowerBase {
     board.registerTower(this);
 
     // Start repeating attack checks
-    this.intervalId = window.setInterval(
+    /* this.intervalId = window.setInterval(
       () => this.attackClosestEnemy(),
       this.attackSpeed
-    );
+    ); */
   }
 
   // Find and damage the closest enemy within range
-  private attackClosestEnemy(): void {
+  attackClosestEnemy(): void {
     let enemies = this.board.getEnemies();
 
     if (enemies.length === 0) {
@@ -65,6 +66,7 @@ class TowerBase {
 
     if (closest) {
       closest.takeDamage(this.damage);
+      this.lastAttackTime = Date.now();
     }
   }
 
