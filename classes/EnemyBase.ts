@@ -8,7 +8,9 @@ class EnemyBase {
   private currentBoard: BoardBase | null = null;
   private temporaryPath: [number, number][] | null = null;
   public lastPosition: { x: number; y: number } | null = null;
-  public health: number = 100;
+  private health: number = 100;
+  private interval: NodeJS.Timeout | null = null;
+  public isDead: boolean = false;
 
   constructor(board: BoardBase, speed: number = 0.01, health: number = 100) {
     this.health = health;
@@ -20,10 +22,15 @@ class EnemyBase {
     this.pathIndex = 0;
     this.speed = speed;
     this.currentBoard = board;
+    board.registerEnemy(this);
 
     // Start at the first position in the path
     const [startY, startX] = this.path[0];
     this.position = { x: startX, y: startY };
+
+    this.interval = setInterval(() => {
+      this.update();
+    }, 100);
   }
 
   // Updates the enemy's position by lerping towards the next point in the path
@@ -64,6 +71,23 @@ class EnemyBase {
     } else {
       // Follow the main path
       this.followPath(this.path);
+    }
+  }
+
+  public takeDamage(damage: number): void {
+    this.health -= damage;
+
+    if (this.health <= 0 && !this.isDead) {
+      this.isDead = true;
+      this.die();
+    }
+  }
+  public die(): void {
+    console.log("Enemy has died.");
+    if (this.interval) {
+      clearInterval(this.interval);
+      this.interval = null;
+      this.currentBoard?.unregisterEnemy(this);
     }
   }
 
@@ -170,6 +194,7 @@ class EnemyBase {
           nx >= 0 &&
           nx < cols &&
           this.currentBoard!.getCellType(ny, nx) !== "W" && // Exclude walls
+          this.currentBoard!.getCellType(ny, nx) !== "T" && // Exclude towers
           !processed.has(key([ny, nx])) // Exclude already processed nodes
       );
 

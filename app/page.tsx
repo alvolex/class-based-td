@@ -3,6 +3,7 @@ import { useEffect, useState, useMemo } from 'react';
 import './board.scss';
 import BoardBase from "@/classes/BoardBase";
 import EnemyBase from "@/classes/EnemyBase";
+import TowerBase from '@/classes/TowerBase';
 
 export default function Home() {
   const [boardHtml, setBoardHtml] = useState<string>('');
@@ -13,26 +14,17 @@ export default function Home() {
   });
 
   const enemy = useMemo(() => new EnemyBase(board, 0.45), [board]);
-  const enemy2 = useMemo(() => new EnemyBase(board, 0.7), [board]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      enemy.update();
       setBoardHtml(board.draw()); // Update the grid HTML
     }, 100);
 
-    
-   /*  const interval2 = setInterval(() => {
-      enemy2.update();
-      setBoardHtml(board.draw()); // Update the grid HTML
-    }, 100); */
-    
     return () => clearInterval(interval);
-   return () => clearInterval(interval2);
-  }, [enemy, enemy2]);
+  }, [enemy]);
 
   const handleAddTower = (x: number, y: number) => {
-    if (board.addTower(x, y)) {
+    if (new TowerBase(board, x, y, 100, 3, 500)) {
       setBoardHtml(board.draw()); // Update the grid HTML
     }
   };

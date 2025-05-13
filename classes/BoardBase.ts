@@ -1,6 +1,11 @@
+import type EnemyBase from "./EnemyBase";
+import TowerBase from "./TowerBase";
+
 class BoardBase {
   private grid: { type: string; enemyCount: number }[][];
   public path: [number, number][] | null = null;
+  private enemies: EnemyBase[] = [];
+  private towers: TowerBase[] = [];
 
   constructor(private x: number, private y: number) {
     this.grid = [];
@@ -70,8 +75,6 @@ class BoardBase {
         this.grid[y][x].type.trim() === "P") &&
       this.isPathAvailable(x, y)
     ) {
-      this.grid[y][x].type = "T"; // Place tower
-
       // Refresh enemy visibility immediately
       this.grid.forEach((row) => {
         row.forEach((cell) => {
@@ -81,6 +84,7 @@ class BoardBase {
         });
       });
 
+      this.grid[y][x].type = "T"; // Set tower position
       return true;
     }
     return false; // Invalid placement
@@ -227,25 +231,6 @@ class BoardBase {
     console.log("No path found");
     return null; // No path found
   }
-  // Adds event listeners to get x and y position of clicked cells
-  addClickListeners(): void {
-    if (typeof window !== "undefined") {
-      document.querySelectorAll(".cell").forEach((cell, index) => {
-        const x = index % this.x;
-        const y = Math.floor(index / this.x);
-
-        // Remove any existing click listeners
-        const newCell = cell.cloneNode(true) as HTMLElement;
-        cell.replaceWith(newCell);
-
-        // Add the new click listener
-        newCell.addEventListener("click", () => {
-          console.log(`Clicked cell at x: ${x}, y: ${y}`);
-          this.addTower(x, y);
-        });
-      });
-    }
-  }
 
   // Public method to get the type of a cell
   public getCellType(y: number, x: number): string {
@@ -258,6 +243,36 @@ class BoardBase {
   // Public method to get grid dimensions
   public getGridDimensions(): { rows: number; cols: number } {
     return { rows: this.grid.length, cols: this.grid[0].length };
+  }
+
+  public registerEnemy(enemy: EnemyBase): void {
+    this.enemies.push(enemy);
+  }
+
+  public getEnemies(): EnemyBase[] {
+    return this.enemies;
+  }
+
+  public registerTower(tower: TowerBase): void {
+    this.towers.push(tower);
+  }
+
+  public unregisterEnemy(enemy: EnemyBase): void {
+    // Check if the enemy is already unregistered
+    if (!this.enemies.includes(enemy)) {
+      return;
+    }
+
+    const pos = enemy.getPosition();
+    const cell = this.grid[Math.floor(pos.y)][Math.floor(pos.x)];
+    if (cell.enemyCount > 0) {
+      cell.enemyCount -= 1;
+    }
+    if (cell.enemyCount === 0) {
+      cell.type = "P"; // Reset to path if no enemies remain
+    }
+
+    this.enemies = this.enemies.filter((e) => e !== enemy);
   }
 }
 
