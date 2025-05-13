@@ -1,5 +1,5 @@
 class BoardBase {
-  private grid: string[][];
+  private grid: { type: string; enemyCount: number }[][];
   public path: [number, number][] | null = null;
 
   constructor(private x: number, private y: number) {
@@ -15,23 +15,15 @@ class BoardBase {
           colIndex === 0 ||
           colIndex === this.x - 1
         ) {
-          return "W"; // Wall
+          return { type: "W", enemyCount: 0 }; // Wall
         }
-        return "empty"; // Empty cell
+        return { type: "empty", enemyCount: 0 }; // Empty cell
       });
     });
 
-    this.grid[1][0] = "S"; // Start point (top-left inside the wall)
-    this.grid[this.y - 2][this.x - 1] = "E"; // End point (bottom-right inside the wall)
-    
-    //add random walls
-    /* for (let i = 0; i < this.x * this.y * 0.1; i++) {
-        const randomX = Math.floor(Math.random() * (this.x - 2)) + 1;
-        const randomY = Math.floor(Math.random() * (this.y - 2)) + 1;
-        if (this.grid[randomY][randomX] === "empty") {
-            this.grid[randomY][randomX] = "W"; // Add wall
-        }
-    } */
+    this.grid[1][0] = { type: "S", enemyCount: 0 }; // Start point (top-left inside the wall)
+    this.grid[this.y - 2][this.x - 1] = { type: "E", enemyCount: 0 }; // End point (bottom-right inside the wall)
+
     this.findShortestPath(); // Generate the path
   }
 
@@ -52,14 +44,16 @@ class BoardBase {
   }
 
   // Helper method to get CSS class for a cell
-  private getCellClass(cell: string): string {
-    switch (cell) {
+  private getCellClass(cell: { type: string; enemyCount: number }): string {
+    switch (cell.type) {
       case "W":
         return "wall";
       case "S":
         return "start";
       case "E":
         return "end";
+      case "Enemy":
+        return "enemy";
       case "T":
         return "tower";
       case "P":
@@ -71,18 +65,66 @@ class BoardBase {
 
   // Adds a tower to the grid
   addTower(x: number, y: number): boolean {
-    if ((this.grid[y][x].trim() === "empty" || this.grid[y][x].trim() === "P") && this.isPathAvailable(x, y)) {
-      console.log(`Tower placed at x: ${x}, y: ${y}`);
-      this.grid[y][x] = "T"; // Place tower
+    if (
+      (this.grid[y][x].type.trim() === "empty" ||
+        this.grid[y][x].type.trim() === "P") &&
+      this.isPathAvailable(x, y)
+    ) {
+      this.grid[y][x].type = "T"; // Place tower
+
+      // Refresh enemy visibility immediately
+      this.grid.forEach((row) => {
+        row.forEach((cell) => {
+          if (cell.enemyCount > 0) {
+            cell.type = "Enemy"; // Ensure enemy cells are updated
+          }
+        });
+      });
+
       return true;
     }
     return false; // Invalid placement
   }
 
+  setEnemyPosition(
+    x: number,
+    y: number,
+    oldX: number,
+    oldY: number,
+    isTemporaryPath: boolean = false
+  ): void {
+    console.log(this.grid[y][x].type === "empty" || this.grid[y][x].type === "P");
+    if (this.grid[y][x].type === "empty" || this.grid[y][x].type === "P") {
+      this.grid[y][x].type = "Enemy"; // Set enemy position
+      this.grid[y][x].enemyCount += 1;
+    }
+    
+    if (
+      this.grid[oldY][oldX].type === "Enemy" &&
+      this.grid[oldY][oldX].enemyCount > 0
+    ) {
+      this.grid[oldY][oldX].enemyCount -= 1;
+      if (this.grid[oldY][oldX].enemyCount === 0 && !isTemporaryPath) {
+        this.grid[oldY][oldX].type = "P"; // Reset to path if no enemies remain and not on temporary path
+      } else if (this.grid[oldY][oldX].enemyCount === 0 && isTemporaryPath) {
+        this.grid[oldY][oldX].type = "empty"; // Reset to empty if no enemies remain and on temporary path
+      }
+    }
+
+    if(isTemporaryPath){
+      this.grid[y][x].type = "Enemy"; // Set temporary path
+      this.grid[y][x].enemyCount += 1;
+
+      if (this.grid[oldY][oldX].enemyCount === 0) {
+        this.grid[oldY][oldX].type = "empty"; // Reset to empty if no enemies remain
+      }
+    }
+  }
+
   // Checks if a path exists between start and end points
   private isPathAvailable(x: number, y: number): boolean {
     const original = this.grid[y][x];
-    this.grid[y][x] = "T"; // Temporarily place tower
+    this.grid[y][x].type = "T"; // Temporarily place tower
     const pathExists = this.findShortestPath() !== null;
     console.log(`Path available: ${pathExists}`);
     this.grid[y][x] = original; // Restore original cell
@@ -90,10 +132,10 @@ class BoardBase {
   }
 
   // Implements A* pathfinding to find the shortest path
-  private findShortestPath(): [number, number][] | null {
-    const start: [number, number] = [1, 1]; // Start point
-    const end: [number, number] = [this.y - 2, this.x - 2]; // End point
-
+  public findShortestPath(
+    start: [number, number] = [1, 1],
+    end: [number, number] = [this.y - 2, this.x - 2]
+  ): [number, number][] | null {
     const openSet: [number, number][] = [start];
     const cameFrom: Map<string, [number, number]> = new Map();
     const gScore: Map<string, number> = new Map();
@@ -134,15 +176,15 @@ class BoardBase {
           temp = cameFrom.get(key(temp));
         }
         console.log(`Path: ${JSON.stringify(path)}`);
-        
+
         //remove old path from grid
         this.path?.forEach(([y, x]) => {
-            this.grid[y][x] = "empty"; // Mark path cells as empty
+          this.grid[y][x].type = "empty"; // Mark path cells as empty
         });
-        
+
         this.path = path;
         this.path.forEach(([y, x]) => {
-          this.grid[y][x] = "P"; // Mark path cells
+          this.grid[y][x].type = "P"; // Mark path cells
         });
         return path;
       }
@@ -161,8 +203,8 @@ class BoardBase {
           ny < this.y &&
           nx >= 0 &&
           nx < this.x &&
-          this.grid[ny][nx] !== "W" &&
-          this.grid[ny][nx] !== "T" &&
+          this.grid[ny][nx].type !== "W" &&
+          this.grid[ny][nx].type !== "T" &&
           !processed.has(key([ny, nx])) // Exclude processed nodes
       );
 
@@ -206,6 +248,19 @@ class BoardBase {
         });
       });
     }
+  }
+
+  // Public method to get the type of a cell
+  public getCellType(y: number, x: number): string {
+    if (y >= 0 && y < this.grid.length && x >= 0 && x < this.grid[0].length) {
+      return this.grid[y][x].type;
+    }
+    return "W"; // Treat out-of-bounds as walls
+  }
+
+  // Public method to get grid dimensions
+  public getGridDimensions(): { rows: number; cols: number } {
+    return { rows: this.grid.length, cols: this.grid[0].length };
   }
 }
 

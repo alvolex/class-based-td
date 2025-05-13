@@ -12,25 +12,24 @@ export default function Home() {
     return newBoard;
   });
 
-  const enemy = useMemo(() => new EnemyBase(board, 0.1), [board]);
+  const enemy = useMemo(() => new EnemyBase(board, 0.7), [board]);
+  const enemy2 = useMemo(() => new EnemyBase(board, 0.7), [board]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       enemy.update();
-      const enemyPosition = enemy.getPosition();
-      const enemyX = Math.floor(enemyPosition.x);
-      const enemyY = Math.floor(enemyPosition.y);
+      setBoardHtml(board.draw()); // Update the grid HTML
+    }, 100);
 
-      // Update the enemy's position using absolute positioning
-      const enemyDiv = document.querySelector('.enemy') as HTMLElement;
-      if (enemyDiv) {
-        enemyDiv.style.left = `${enemyX * 20}px`; // Assuming each cell is 20px wide
-        enemyDiv.style.top = `${enemyY * 20}px`; // Assuming each cell is 20px tall
-      }
-    }, 1000);
-
+    
+   /*  const interval2 = setInterval(() => {
+      enemy2.update();
+      setBoardHtml(board.draw()); // Update the grid HTML
+    }, 100); */
+    
     return () => clearInterval(interval);
-  }, [enemy]);
+   return () => clearInterval(interval2);
+  }, [enemy, enemy2]);
 
   const handleAddTower = (x: number, y: number) => {
     if (board.addTower(x, y)) {
@@ -46,7 +45,7 @@ export default function Home() {
   return (
     <div className={'board-wrapper'}>
       <div
-        
+
         dangerouslySetInnerHTML={{ __html: boardHtml }}
         onClick={(e) => {
           const target = e.target as HTMLElement;
@@ -59,7 +58,6 @@ export default function Home() {
           }
         }}
       />
-      <div className="enemy"></div>
     </div>
   );
 }
