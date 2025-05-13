@@ -8,8 +8,10 @@ class EnemyBase {
   private currentBoard: BoardBase | null = null;
   private temporaryPath: [number, number][] | null = null;
   public lastPosition: { x: number; y: number } | null = null;
+  public health: number = 100;
 
-  constructor(board: BoardBase, speed: number = 0.01) {
+  constructor(board: BoardBase, speed: number = 0.01, health: number = 100) {
+    this.health = health;
     if (!board.path) {
       throw new Error("No path available in the board.");
     }
@@ -46,7 +48,13 @@ class EnemyBase {
       this.followPath(this.temporaryPath, true);
       if (this.pathIndex >= this.temporaryPath.length - 1) {
         this.temporaryPath = null; // Clear temporary path once reached
-        this.pathIndex = 0; // Reset pathIndex for the main path
+
+        // get pathIndex of the nearest point
+        const nearestPointIndex = this.path.findIndex(
+          (point) => point[0] === nearestPoint![0] && point[1] === nearestPoint![1]
+        );
+
+        this.pathIndex = nearestPointIndex;
       }
     } else if (nearestPoint && this.calculateDistance(currentPoint, nearestPoint) > 1) {
       // Calculate a temporary path to the nearest point in the main path
@@ -67,36 +75,29 @@ class EnemyBase {
     const [nextY, nextX] = path[this.pathIndex + 1];
     const target = { x: nextX, y: nextY };
 
-    // Store the current position before updating
-    const oldX = Math.floor(this.position.x);
-    const oldY = Math.floor(this.position.y);
+    // Use lastPosition as previous cell coordinates
+    const oldX = this.lastPosition?.x ?? Math.floor(this.position.x);
+    const oldY = this.lastPosition?.y ?? Math.floor(this.position.y);
 
     // Lerp towards the target position
     this.position.x += (target.x - this.position.x) * this.speed;
     this.position.y += (target.y - this.position.y) * this.speed;
-
-    // Update the last position
-    this.lastPosition = { x: oldX, y: oldY };
 
     // Check if the enemy is close enough to the target to move to the next point
     if (
       Math.abs(this.position.x - target.x) < 0.01 &&
       Math.abs(this.position.y - target.y) < 0.01
     ) {
-      console.log(
-        `Enemy moved to next point: (${Math.floor(target.x)}, ${Math.floor(
-          target.y
-        )})`
-      );
       this.currentBoard?.setEnemyPosition(
-        Math.floor(target.x),
-        Math.floor(target.y),
-        Math.floor(this.position.x),
-        Math.floor(this.position.y),
+        nextX,
+        nextY,
+        this.lastPosition?.x ?? oldX,
+        this.lastPosition?.y ?? oldY,
         isTemporaryPath
       );
-      this.position = { x: target.x, y: target.y }; // Snap to the target
+      this.position = { x: target.x, y: target.y };
       this.pathIndex++;
+      this.lastPosition = { x: target.x, y: target.y }; // Update lastPosition to the current position
     }
   }
 

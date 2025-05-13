@@ -12,7 +12,7 @@ export default function Home() {
     return newBoard;
   });
 
-  const enemy = useMemo(() => new EnemyBase(board, 0.7), [board]);
+  const enemy = useMemo(() => new EnemyBase(board, 0.45), [board]);
   const enemy2 = useMemo(() => new EnemyBase(board, 0.7), [board]);
 
   useEffect(() => {

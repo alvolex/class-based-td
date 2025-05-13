@@ -93,7 +93,6 @@ class BoardBase {
     oldY: number,
     isTemporaryPath: boolean = false
   ): void {
-    console.log(this.grid[y][x].type === "empty" || this.grid[y][x].type === "P");
     if (this.grid[y][x].type === "empty" || this.grid[y][x].type === "P") {
       this.grid[y][x].type = "Enemy"; // Set enemy position
       this.grid[y][x].enemyCount += 1;
@@ -112,9 +111,7 @@ class BoardBase {
     }
 
     if(isTemporaryPath){
-      this.grid[y][x].type = "Enemy"; // Set temporary path
-      this.grid[y][x].enemyCount += 1;
-
+      this.grid[oldY][oldX].enemyCount -= 1;
       if (this.grid[oldY][oldX].enemyCount === 0) {
         this.grid[oldY][oldX].type = "empty"; // Reset to empty if no enemies remain
       }
